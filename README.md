@@ -46,7 +46,10 @@ ThreeApp est une application interactive qui permet de contrôler et manipuler d
 
 ```plaintext
 threeApp/
-├── my-three-app/
+├── frontend/
+│   ├── public/
+│   │   ├── textures/
+│   │   │   ├── textureName.jpg       # Les textures des elements
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── ThreeScene.vue       # Scène Three.js et gestion des cubes
