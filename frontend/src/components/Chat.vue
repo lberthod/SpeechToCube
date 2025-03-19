@@ -1,15 +1,24 @@
 <template>
   <div class="chat-container">
     <h2>Contrôle via commande</h2>
-    <textarea v-model="userMessage" placeholder="Parlez votre commande ou tapez-la..." rows="3"></textarea>
-    <br />
-    <button @click="toggleRecording">
-      {{ recording ? "Arrêter l'enregistrement" : "Démarrer l'enregistrement" }}
-    </button>
-    <button @click="sendMessage" style="margin-left: 10px;">Envoyer</button>
-    <div v-if="reply" class="reply">
-      <h3>Commande interprétée :</h3>
-      <pre>{{ formattedReply }}</pre>
+
+    <!-- Disposition horizontale : zone de saisie à gauche, retour commande à droite -->
+    <div class="chat-row">
+      <div class="chat-inputs">
+        <textarea v-model="userMessage" placeholder="Parlez votre commande ou tapez-la..." rows="5"></textarea>
+
+        <div class="chat-actions">
+          <button @click="toggleRecording">
+            {{ recording ? "Arrêter l'enregistrement" : "Démarrer l'enregistrement" }}
+          </button>
+          <button @click="sendMessage">Envoyer</button>
+        </div>
+      </div>
+
+      <div v-if="reply" class="reply-panel">
+        <h3>Commande interprétée :</h3>
+        <pre>{{ formattedReply }}</pre>
+      </div>
     </div>
   </div>
 </template>
@@ -19,11 +28,15 @@ import { ref, computed } from 'vue'
 import axios from 'axios'
 import { useCubeStore } from '../store/cubeStore'
 
+// État local
 const userMessage = ref('')
 const reply = ref(null)
 const recording = ref(false)
+
+// Store Pinia
 const cubeStore = useCubeStore()
 
+// Vecteurs direction pour le déplacement
 const directionVectors = {
   droite: { x: 1, y: 0, z: 0 },
   gauche: { x: -1, y: 0, z: 0 },
@@ -31,6 +44,7 @@ const directionVectors = {
   bas: { x: 0, y: -1, z: 0 }
 }
 
+// Couleurs possibles
 const colorMapping = {
   red: 0xff0000,
   blue: 0x0000ff,
@@ -45,6 +59,7 @@ const colorMapping = {
   magenta: 0xff00ff
 }
 
+// Reconnaissance vocale (Web Speech API) si dispo
 let recognition
 if ('webkitSpeechRecognition' in window) {
   const SpeechRecognition = window.webkitSpeechRecognition
@@ -76,6 +91,7 @@ function toggleRecording() {
   }
 }
 
+// Envoi de la commande au serveur
 async function sendMessage() {
   if (!userMessage.value.trim()) return
   try {
@@ -84,7 +100,7 @@ async function sendMessage() {
     })
     reply.value = response.data.reply
     userMessage.value = ''
-    console.log(reply.value);
+    console.log('Réponse brute :', reply.value)
 
     let parsed
     try {
@@ -93,171 +109,220 @@ async function sendMessage() {
       console.error('Erreur lors du parsing du JSON:', e)
       return
     }
-    const actions = Array.isArray(parsed) ? parsed : [parsed]
-    console.log(parsed);
 
-    actions.forEach((actionObj) => {
+    const actions = Array.isArray(parsed) ? parsed : [parsed]
+    console.log('Actions interprétées :', actions)
+
+    // Pour chaque action, on exécute sur le store / la scène
+    actions.forEach(actionObj => {
       const targetCubeNumber = actionObj.cube || 1
-      console.log(actionObj.action);
-      if (actionObj.action === 'moveDirection') {
-        const magnitude = parseFloat(actionObj.magnitude)
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'moveDirection', {
-            direction: actionObj.direction,
-            magnitude: magnitude
-          })
-        } else {
-          const vec = directionVectors[actionObj.direction]
-          if (vec) {
+      switch (actionObj.action) {
+        case 'moveDirection': {
+          const magnitude = parseFloat(actionObj.magnitude)
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'moveDirection', {
+              direction: actionObj.direction,
+              magnitude
+            })
+          } else {
+            // Sur le cube principal, on modifie la targetPosition
+            const vec = directionVectors[actionObj.direction]
+            if (vec) {
+              cubeStore.setTargetPosition({
+                x: cubeStore.targetPosition.x + vec.x * magnitude,
+                y: cubeStore.targetPosition.y + vec.y * magnitude,
+                z: cubeStore.targetPosition.z + vec.z * magnitude
+              })
+            }
+          }
+          break
+        }
+        case 'moveDepth': {
+          const magnitude = parseFloat(actionObj.magnitude)
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'moveDepth', {
+              direction: actionObj.direction,
+              magnitude
+            })
+          } else {
+            const deltaZ = actionObj.direction === 'forward' ? -1 : 1
             cubeStore.setTargetPosition({
-              x: cubeStore.targetPosition.x + vec.x * magnitude,
-              y: cubeStore.targetPosition.y + vec.y * magnitude,
-              z: cubeStore.targetPosition.z + vec.z * magnitude
+              x: cubeStore.targetPosition.x,
+              y: cubeStore.targetPosition.y,
+              z: cubeStore.targetPosition.z + deltaZ * magnitude
             })
           }
+          break
         }
-      } else if (actionObj.action === 'moveDepth') {
-        const magnitude = parseFloat(actionObj.magnitude)
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'moveDepth', {
-            direction: actionObj.direction,
-            magnitude: magnitude
-          })
-        } else {
-          const deltaZ = actionObj.direction === 'forward' ? -1 : 1
-          cubeStore.setTargetPosition({
-            x: cubeStore.targetPosition.x,
-            y: cubeStore.targetPosition.y,
-            z: cubeStore.targetPosition.z + deltaZ * magnitude
-          })
-        }
-      } else if (actionObj.action === 'changeColor') {
-        let newColor
-        const key = typeof actionObj.color === 'string' ? actionObj.color.toLowerCase() : ''
-        if (colorMapping[key]) {
-          newColor = colorMapping[key]
-        } else if (typeof actionObj.color === 'string' && /^#?[0-9A-Fa-f]{6}$/.test(actionObj.color)) {
-          newColor = parseInt(actionObj.color.replace('#', ''), 16)
-        }
-        if (newColor !== undefined) {
-          if (targetCubeNumber > 1) {
-            cubeStore.updateCubeFn(targetCubeNumber, 'color', newColor)
-          } else {
-            cubeStore.setCubeColor(newColor)
+        case 'changeColor': {
+          let newColor;
+          const key = typeof actionObj.color === 'string' ? actionObj.color.toLowerCase() : '';
+          if (colorMapping[key]) {
+            newColor = colorMapping[key];
+          } else if (
+            typeof actionObj.color === 'string' &&
+            /^#?[0-9A-Fa-f]{6}$/.test(actionObj.color)
+          ) {
+            newColor = parseInt(actionObj.color.replace('#', ''), 16);
           }
+          if (newColor !== undefined) {
+            if (targetCubeNumber > 1) {
+              // Pour les clones, on passe la propriété "changeColor" (alias de "color")
+              cubeStore.updateCubeFn(targetCubeNumber, 'changeColor', newColor);
+            } else {
+              // Pour le cube principal, on utilise directement la méthode de mise à jour de la couleur
+              cubeStore.setCubeColor(newColor);
+            }
+          }
+          break;
         }
-      } else if (actionObj.action === 'rotateCube') {
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'rotation', actionObj.angle)
-        } else {
-          cubeStore.updateCubeFn(1, 'rotation', actionObj.angle)
+
+        case 'rotateCube': {
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'rotation', actionObj.angle)
+          } else {
+            cubeStore.updateCubeFn(1, 'rotation', actionObj.angle)
+          }
+          break
         }
-      } else if (actionObj.action === 'scaleCube') {
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'scale', actionObj.factor)
-        } else {
-          cubeStore.setCubeScale(actionObj.factor)
+        case 'scaleCube': {
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'scale', actionObj.factor)
+          } else {
+            cubeStore.setCubeScale(actionObj.factor)
+          }
+          break
         }
-      } else if (actionObj.action === 'resetCube') {
-        cubeStore.resetCube()
-      } else if (actionObj.action === 'toggleVisibility') {
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'toggleVisibility', null)
-        } else {
-          cubeStore.toggleVisibility()
+        case 'resetCube': {
+          cubeStore.resetCube()
+          break
         }
-      } else if (actionObj.action === 'changeTexture') {
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'texture', actionObj.texture)
-        } else {
-          cubeStore.changeCubeTexture(actionObj.texture)
+        case 'toggleVisibility': {
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'toggleVisibility', null)
+          } else {
+            cubeStore.toggleVisibility()
+          }
+          break
         }
-      } else if (actionObj.action === 'createCube') {
-        if (!cubeStore.sceneMounted) {
-          console.error("La scène n'est pas encore prête, createCube annulée.")
-          reply.value = "Erreur : La scène n'est pas encore prête, createCube annulée."
-          return
+        case 'changeTexture': {
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'texture', actionObj.texture)
+          } else {
+            cubeStore.changeCubeTexture(actionObj.texture)
+          }
+          break
         }
-        const cloneState = cubeStore.duplicateCube()
-        cubeStore.addCube(cloneState)
-      } else if (actionObj.action === 'removeCube') {
-        cubeStore.removeCube()
-      } else if (actionObj.action === 'startAnimation') {
-        const payload = { animationType: actionObj.animationType }
-        if (actionObj.duration) payload.duration = actionObj.duration
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'startAnimation', payload)
-        } else {
-          cubeStore.updateCubeFn(1, 'startAnimation', payload)
+        case 'createCube': {
+          if (!cubeStore.sceneMounted) {
+            console.error("La scène n'est pas prête, createCube annulée.")
+            reply.value = "Erreur : La scène n'est pas encore prête, createCube annulée."
+            return
+          }
+          const cloneState = cubeStore.duplicateCube()
+          cubeStore.addCube(cloneState)
+          break
         }
-      } else if (actionObj.action === 'stopAnimation') {
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'stopAnimation', null)
-        } else {
-          cubeStore.updateCubeFn(1, 'stopAnimation', null)
+        case 'removeCube': {
+          cubeStore.removeCube()
+          break
         }
-      } else if (actionObj.action === 'flipCube') {
-        const duration = actionObj.duration || 1
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'flipCube', { duration })
-        } else {
-          cubeStore.updateCubeFn(1, 'flipCube', { duration })
+        case 'startAnimation': {
+          const payload = { animationType: actionObj.animationType }
+          if (actionObj.duration) payload.duration = actionObj.duration
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'startAnimation', payload)
+          } else {
+            cubeStore.updateCubeFn(1, 'startAnimation', payload)
+          }
+          break
         }
-      } else if (actionObj.action === 'launchBall') {
-        const speed = actionObj.speed ? parseFloat(actionObj.speed) : 0.1
-        const direction = actionObj.direction || 'droite'
-        cubeStore.launchBall({ speed, direction })
-      } else if (actionObj.action === 'glide') {
-        const payload = {
-          direction: actionObj.direction,
-          magnitude: parseFloat(actionObj.magnitude)
+        case 'stopAnimation': {
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'stopAnimation', null)
+          } else {
+            cubeStore.updateCubeFn(1, 'stopAnimation', null)
+          }
+          break
         }
-        if (actionObj.duration) payload.duration = actionObj.duration
-        if (actionObj.speed) payload.speed = actionObj.speed.toLowerCase()
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'glide', payload)
-        } else {
-          cubeStore.updateCubeFn(1, 'glide', payload)
+        case 'flipCube': {
+          const duration = actionObj.duration || 1
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'flipCube', { duration })
+          } else {
+            cubeStore.updateCubeFn(1, 'flipCube', { duration })
+          }
+          break
         }
-      } else if (actionObj.action === 'rhythmic') {
-        const payload = { animationType: 'rhythmic' }
-        if (actionObj.duration) payload.duration = actionObj.duration
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'startAnimation', payload)
-        } else {
-          cubeStore.updateCubeFn(1, 'startAnimation', payload)
+        case 'launchBall': {
+          const speed = actionObj.speed ? parseFloat(actionObj.speed) : 0.1
+          const direction = actionObj.direction || 'droite'
+          cubeStore.launchBall({ speed, direction })
+          break
         }
-      } else if (actionObj.action === 'decline') {
-        const payload = { duration: actionObj.duration }
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'decline', payload)
-        } else {
-          cubeStore.updateCubeFn(1, 'decline', payload)
+        case 'glide': {
+          const payload = {
+            direction: actionObj.direction,
+            magnitude: parseFloat(actionObj.magnitude)
+          }
+          if (actionObj.duration) payload.duration = actionObj.duration
+          if (actionObj.speed) payload.speed = actionObj.speed.toLowerCase()
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'glide', payload)
+          } else {
+            cubeStore.updateCubeFn(1, 'glide', payload)
+          }
+          break
         }
-      } else if (actionObj.action === 'trail') {
-        const payload = { intensity: parseFloat(actionObj.intensity) }
-        if (actionObj.duration) payload.duration = actionObj.duration
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'trail', payload)
-        } else {
-          cubeStore.updateCubeFn(1, 'trail', payload)
+        case 'rhythmic': {
+          const payload = { animationType: 'rhythmic' }
+          if (actionObj.duration) payload.duration = actionObj.duration
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'startAnimation', payload)
+          } else {
+            cubeStore.updateCubeFn(1, 'startAnimation', payload)
+          }
+          break
         }
-      } else if (actionObj.action === 'morphing') {
-        const modelType = actionObj.model ? actionObj.model : 'sphere'
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'morphing', { model: modelType })
-        } else {
-          cubeStore.updateCubeFn(1, 'morphing', { model: modelType })
+        case 'decline': {
+          const payload = { duration: actionObj.duration }
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'decline', payload)
+          } else {
+            cubeStore.updateCubeFn(1, 'decline', payload)
+          }
+          break
         }
-      } else if (actionObj.action === 'moveElementCloseToElement') {
-        const sourceCubeNumber = actionObj.sourceCube
-        if (targetCubeNumber > 1) {
-          cubeStore.updateCubeFn(targetCubeNumber, 'moveElementCloseToElement', { sourceCube: sourceCubeNumber })
-        } else {
-          cubeStore.updateCubeFn(1, 'moveElementCloseToElement', { sourceCube: sourceCubeNumber })
+        case 'trail': {
+          const payload = { intensity: parseFloat(actionObj.intensity) }
+          if (actionObj.duration) payload.duration = actionObj.duration
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'trail', payload)
+          } else {
+            cubeStore.updateCubeFn(1, 'trail', payload)
+          }
+          break
         }
-      } else {
-        console.warn(`Action inconnue: ${actionObj.action}`)
+        case 'morphing': {
+          const modelType = actionObj.model ? actionObj.model : 'sphere'
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'morphing', { model: modelType })
+          } else {
+            cubeStore.updateCubeFn(1, 'morphing', { model: modelType })
+          }
+          break
+        }
+        case 'moveElementCloseToElement': {
+          const sourceCubeNumber = actionObj.sourceCube
+          if (targetCubeNumber > 1) {
+            cubeStore.updateCubeFn(targetCubeNumber, 'moveElementCloseToElement', { sourceCube: sourceCubeNumber })
+          } else {
+            cubeStore.updateCubeFn(1, 'moveElementCloseToElement', { sourceCube: sourceCubeNumber })
+          }
+          break
+        }
+        default:
+          console.warn(`Action inconnue: ${actionObj.action}`)
       }
     })
   } catch (error) {
@@ -266,6 +331,7 @@ async function sendMessage() {
   }
 }
 
+// Affichage JSON formaté de la commande interprétée
 const formattedReply = computed(() => {
   try {
     return JSON.stringify(
@@ -281,28 +347,84 @@ const formattedReply = computed(() => {
 
 <style scoped>
 .chat-container {
-  width: 400px;
-  margin: 20px auto;
+  margin: 20px;
+  padding: 10px;
+  background: #222;
+  border-radius: 8px;
+  color: #fff;
+}
+
+.chat-container h2 {
+  margin-top: 0;
   text-align: center;
+}
+
+/* Disposition horizontale */
+.chat-row {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+/* Zone de gauche */
+.chat-inputs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Boutons en ligne */
+.chat-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Zone de droite */
+.reply-panel {
+  flex: 1;
+  background: #333;
+  padding: 10px;
+  border-radius: 6px;
+  max-width: 300px;
+  overflow: auto;
 }
 
 textarea {
   width: 100%;
   font-size: 16px;
+  resize: vertical;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #666;
+  color: #000;
 }
 
 button {
-  margin-top: 10px;
-  padding: 8px 16px;
-  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6em 1.2em;
+  font-size: 1rem;
+  font-weight: 500;
+  background-color: #4f80ff;
+  color: #fff;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.reply {
-  margin-top: 20px;
-  background: #f0f0f0;
-  padding: 10px;
+button:hover {
+  background-color: #00c853;
+}
+
+button:focus {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+.reply-panel pre {
+  white-space: pre-wrap;
+  background: #222;
+  color: #0f0;
+  padding: 6px;
   border-radius: 4px;
-  text-align: left;
 }
 </style>

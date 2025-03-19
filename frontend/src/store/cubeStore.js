@@ -1,6 +1,7 @@
+// src/store/cubeStore.js
 import { defineStore } from 'pinia'
 import { reactive, ref, watch } from 'vue'
-import { generateUniqueId } from '../utils'  // ajustez le chemin selon votre organisation
+import { generateUniqueId } from '../utils' // Assurez-vous que le chemin est correct
 
 export const useCubeStore = defineStore('cubeStore', () => {
   // État du cube principal
@@ -17,7 +18,7 @@ export const useCubeStore = defineStore('cubeStore', () => {
   // Liste des éléments de la scène
   const elements = ref([])
 
-  // Chargement de l'état depuis localStorage s'il existe
+  // Chargement de l'état depuis localStorage (s'il existe)
   const savedState = localStorage.getItem('cubeState')
   if (savedState) {
     try {
@@ -54,13 +55,11 @@ export const useCubeStore = defineStore('cubeStore', () => {
   watch(cubeVisible, saveState)
   watch(cubeTexture, saveState)
 
-  // Fonctions de gestion des éléments
+  // Fonctions de gestion des éléments (liste affichée dans le panneau de gestion)
   function addElement(elementData) {
-    // Si un id est déjà présent, on ne le modifie pas
-    console.log("ide" + elementData.id);
+    // Si aucun id n'est fourni, on en génère un
     if (!elementData.id) {
-      return; // Par défaut, le préfixe sera "id_"
-    }
+return;    }
     elements.value.push(elementData)
   }
   function updateElement(id, newData) {
@@ -76,7 +75,7 @@ export const useCubeStore = defineStore('cubeStore', () => {
     }
   }
 
-  // Fonctions d'interfaçage avec la scène
+  // Fonctions d'interfaçage avec la scène (ces fonctions seront définies par le manager externe)
   let addCubeFn = null
   function setAddCube(fn) {
     addCubeFn = fn
@@ -122,6 +121,7 @@ export const useCubeStore = defineStore('cubeStore', () => {
     sceneMounted.value = value
   }
 
+  // La fonction de mise à jour du cube sera définie par le manager (pour le cube principal ou ses clones)
   const updateCubeFn = ref(null)
   function setUpdateCube(fn) {
     updateCubeFn.value = fn
@@ -191,6 +191,7 @@ export const useCubeStore = defineStore('cubeStore', () => {
   }
 
   return {
+    // État et setters
     targetPosition,
     setTargetPosition,
     cubeColor,
@@ -212,17 +213,21 @@ export const useCubeStore = defineStore('cubeStore', () => {
     resetCube,
     cubeFlip,
     flipCube,
+
+    // Gestion des éléments de la scène
+    elements,
+    addElement,
+    updateElement,
+    removeElement,
+
+    // Fonctions d'interfaçage avec la scène
     addCube,
     setAddCube,
-    sceneMounted,
-    setSceneMounted,
     updateCubeFn,
     setUpdateCube,
     launchBall,
     setLaunchBall,
-    elements,
-    addElement,
-    updateElement,
-    removeElement
+    sceneMounted,
+    setSceneMounted
   }
 })
