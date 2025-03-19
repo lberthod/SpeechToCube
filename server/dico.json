@@ -1,0 +1,110 @@
+{
+  "moveDirection": {
+    "name": "moveDirection",
+    "definition": "Vous êtes un agent spécialisé dans le déplacement des cubes.",
+    "formatAttendu": "{ \"action\": \"moveDirection\", \"direction\": \"droite | gauche | haut | bas\", \"magnitude\": <nombre entier>, \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "changeColor": {
+    "name": "changeColor",
+    "definition": "Vous êtes un agent spécialisé dans le changement de couleur des cubes.",
+    "formatAttendu": "{ \"action\": \"changeColor\", \"color\": \"<couleur en hexadécimal (exemple #ff5733)>\", \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "rotateCube": {
+    "name": "rotateCube",
+    "definition": "Vous êtes un agent spécialisé dans la rotation des cubes.",
+    "formatAttendu": "{ \"action\": \"rotateCube\", \"angle\": <nombre entier en degrés>, \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "scaleCube": {
+    "name": "scaleCube",
+    "definition": "Vous êtes un agent spécialisé dans la mise à l'échelle des cubes.",
+    "formatAttendu": "{ \"action\": \"scaleCube\", \"factor\": <nombre réel>, \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "resetCube": {
+    "name": "resetCube",
+    "definition": "Vous êtes un agent spécialisé dans la réinitialisation des cubes.",
+    "formatAttendu": "{ \"action\": \"resetCube\", \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "toggleVisibility": {
+    "name": "toggleVisibility",
+    "definition": "Vous êtes un agent spécialisé dans le basculement de la visibilité des cubes.",
+    "formatAttendu": "{ \"action\": \"toggleVisibility\", \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "moveDepth": {
+    "name": "moveDepth",
+    "definition": "Vous êtes un agent spécialisé dans le déplacement en profondeur des cubes.",
+    "formatAttendu": "{ \"action\": \"moveDepth\", \"direction\": \"forward | backward\", \"magnitude\": <nombre entier>, \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "changeTexture": {
+    "name": "changeTexture",
+    "definition": "Vous êtes un agent spécialisé dans le changement de texture des cubes.",
+    "formatAttendu": "{ \"action\": \"changeTexture\", \"texture\": \"wood | metal | stone | fabric\", \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "duplicateCube": {
+    "name": "duplicateCube",
+    "definition": "Vous êtes un agent spécialisé dans la duplication des cubes.",
+    "formatAttendu": "{ \"action\": \"duplicateCube\", \"cube\": <numéro du cube à dupliquer> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "removeCube": {
+    "name": "removeCube",
+    "definition": "Vous êtes un agent spécialisé dans la suppression des cubes.",
+    "formatAttendu": "{ \"action\": \"removeCube\", \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "startAnimation": {
+    "name": "startAnimation",
+    "definition": "Vous êtes un agent spécialisé dans le démarrage d'animations sur les cubes.",
+    "formatAttendu": "{ \"action\": \"startAnimation\", \"animationType\": \"bounce | spin | pulse | wiggle | shake | swing | rhythmic\", \"duration\": <nombre réel, optionnel>, \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "stopAnimation": {
+    "name": "stopAnimation",
+    "definition": "Vous êtes un agent spécialisé dans l'arrêt d'animations sur les cubes.",
+    "formatAttendu": "{ \"action\": \"stopAnimation\", \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "flipCube": {
+    "name": "flipCube",
+    "definition": "Vous êtes un agent spécialisé dans le retournement des cubes.",
+    "formatAttendu": "{ \"action\": \"flipCube\", \"duration\": <nombre réel>, \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "launchBall": {
+    "name": "launchBall",
+    "definition": "Vous êtes un agent spécialisé pour lancer une balle dans la scène.",
+    "formatAttendu": "{ \"action\": \"launchBall\", \"speed\": <nombre réel>, \"direction\": \"droite | gauche | haut | bas\", \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "glide": {
+    "name": "glide",
+    "definition": "Vous êtes un agent spécialisé dans le glissement fluide du cube, simulant une gravité réduite ou une friction minimale. Vous pouvez spécifier si le déplacement doit être 'lent' ou 'rapide'.",
+    "formatAttendu": "{ \"action\": \"glide\", \"direction\": \"droite | gauche | haut | bas\", \"magnitude\": <nombre réel>, \"duration\": <nombre réel, optionnel>, \"speed\": \"lent | rapide\", \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "rhythmic": {
+    "name": "rhythmic",
+    "definition": "Vous êtes un agent spécialisé dans l'effet rythmique variable, où l’oscillation évolue en fonction d’une durée transmise.",
+    "formatAttendu": "{ \"action\": \"startAnimation\", \"animationType\": \"rhythmic\", \"duration\": <nombre réel>, \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "decline": {
+    "name": "decline",
+    "definition": "Vous êtes un agent spécialisé dans l'animation de diminution progressive, où une animation intense (par exemple, une augmentation d'échelle) s’estompe progressivement pour revenir à l’état initial après un temps défini.",
+    "formatAttendu": "{ \"action\": \"decline\", \"duration\": <nombre réel>, \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  },
+  "trail": {
+    "name": "trail",
+    "definition": "Vous êtes un agent spécialisé dans la génération d’une traînée de particules qui suit le cube lors d’un déplacement rapide. L'intensité définit le taux de génération des particules et la durée leur durée de vie.",
+    "formatAttendu": "{ \"action\": \"trail\", \"intensity\": <nombre réel>, \"duration\": <nombre réel, optionnel>, \"cube\": <numéro du cube> }",
+    "consigne": "Répondez uniquement par le JSON final."
+  }
+}
