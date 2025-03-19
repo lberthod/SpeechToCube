@@ -47,10 +47,10 @@
     "formatAttendu": "{ \"action\": \"changeTexture\", \"texture\": \"wood | metal | stone | fabric\", \"cube\": <numéro du cube> }",
     "consigne": "Répondez uniquement par le JSON final."
   },
-  "duplicateCube": {
-    "name": "duplicateCube",
+  "createCube": {
+    "name": "createCube",
     "definition": "Vous êtes un agent spécialisé dans la duplication des cubes.",
-    "formatAttendu": "{ \"action\": \"duplicateCube\", \"cube\": <numéro du cube à dupliquer> }",
+    "formatAttendu": "{ \"action\": \"createCube\", \"cube\": <numéro du cube à dupliquer ou crééer> }",
     "consigne": "Répondez uniquement par le JSON final."
   },
   "removeCube": {
@@ -116,7 +116,14 @@
       "formatAttendu": "{ \"action\": \"morphing\", \"model\": \"cube | sphere | <nom du modèle GLB>\", \"cube\": <numéro du cube> }",
       "consigne": "Répondez uniquement par le JSON final."
     }
-  
+    ,
+"moveElementCloseToElement": {
+  "name": "moveElementCloseToElement",
+  "definition": "Vous êtes un agent spécialisé dans le déplacement d'un cube pour le positionner à côté d'un autre.",
+  "formatAttendu": "{ \"action\": \"moveElementCloseToElement\", \"sourceCube\": <numéro du cube de référence>, \"cube\": <numéro du cube à déplacer>, \"placement\": \"droite | gauche | dessus | dessous\" }",
+  "consigne": "Répondez uniquement par le JSON final."
+}
+
   
   
 }

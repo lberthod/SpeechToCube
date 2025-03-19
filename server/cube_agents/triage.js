@@ -4,13 +4,13 @@ import OpenAI from 'openai'
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 const TRIAGE_PROMPT = `Vous êtes un agent triage recevant une commande pour un jeu interactif multi-cube. 
-Votre tâche est de déterminer quel agent spécifique doit traiter la commande. 
-Les agents possibles sont : moveDirection, changeColor, rotateCube, scaleCube, resetCube, toggleVisibility, 
-moveDepth, changeTexture, duplicateCube, removeCube, startAnimation, stopAnimation, flipCube, launchBall, glide, decline, trail, morphing 
-Si un numéro de cube est mentionné, incluez-le dans votre réponse. 
-Répondez uniquement par un objet JSON contenant au moins la clé "agent". 
+Votre tâche est de déterminer quel agent spécifique doit traiter la commande parmi les suivants :
+moveDirection, changeColor, rotateCube, scaleCube, resetCube, toggleVisibility, moveDepth, changeTexture, createCube, removeCube, startAnimation, stopAnimation, flipCube, launchBall, glide, decline, trail, morphing, moveElementCloseToElement.
+Si plusieurs actions doivent être effectuées, retournez-les dans un tableau JSON.
+Répondez uniquement par un objet JSON ou un tableau d’objets JSON sans aucun texte supplémentaire.
 Par exemple :
-{"agent": "moveDirection", "cube": 2}`
+[{"agent": "moveDirection", "cube": 2}, {"agent": "flipCube", "cube": 2}]`;
+
 
 export async function triageAgent(message) {
   try {
@@ -29,6 +29,8 @@ export async function triageAgent(message) {
       console.error("Erreur lors du parsing de la réponse du triage :", err)
       resultObj = { agent: "unknown", cube: 1 }
     }
+    console.log("Réponse brute du triage : de " + message + "," +  resultStr);
+
     return resultObj
   } catch (err) {
     console.error("Erreur dans triageAgent :", err)
