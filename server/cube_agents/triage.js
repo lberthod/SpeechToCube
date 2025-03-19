@@ -6,7 +6,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 const TRIAGE_PROMPT = `Vous êtes un agent triage recevant une commande pour un jeu interactif multi-cube. 
 Votre tâche est de déterminer quel agent spécifique doit traiter la commande. 
 Les agents possibles sont : moveDirection, changeColor, rotateCube, scaleCube, resetCube, toggleVisibility, 
-moveDepth, changeTexture, duplicateCube, removeCube, startAnimation, stopAnimation, flipCube, launchBall, glide, decline, trail. 
+moveDepth, changeTexture, duplicateCube, removeCube, startAnimation, stopAnimation, flipCube, launchBall, glide, decline, trail, morphing 
 Si un numéro de cube est mentionné, incluez-le dans votre réponse. 
 Répondez uniquement par un objet JSON contenant au moins la clé "agent". 
 Par exemple :

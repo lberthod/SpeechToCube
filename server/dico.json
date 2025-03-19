@@ -106,5 +106,17 @@
     "definition": "Vous êtes un agent spécialisé dans la génération d’une traînée de particules qui suit le cube lors d’un déplacement rapide. L'intensité définit le taux de génération des particules et la durée leur durée de vie.",
     "formatAttendu": "{ \"action\": \"trail\", \"intensity\": <nombre réel>, \"duration\": <nombre réel, optionnel>, \"cube\": <numéro du cube> }",
     "consigne": "Répondez uniquement par le JSON final."
-  }
+  },
+
+  
+  
+    "morphing": {
+      "name": "morphing",
+      "definition": "Vous êtes un agent spécialisé dans la transformation d'un cube en une sphère, en un cube ou en un modèle 3D (GLB). Votre tâche est de convertir le cube spécifié en l'objet correspondant à la valeur indiquée. Par exemple, si la valeur est 'sphere', le cube devient une sphère ; si c'est 'cube', l'objet redevient un cube, sinon, il cherche dans un dictionnaire de modèles GLB pour charger le modèle correspondant.",
+      "formatAttendu": "{ \"action\": \"morphing\", \"model\": \"cube | sphere | <nom du modèle GLB>\", \"cube\": <numéro du cube> }",
+      "consigne": "Répondez uniquement par le JSON final."
+    }
+  
+  
+  
 }
