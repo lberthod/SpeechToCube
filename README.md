@@ -53,19 +53,25 @@ Le projet se divise principalement en deux parties : le front-end et le back-end
 
 ```
 threeApp/
-├── frontend/
-│   ├── public/
-│   │   └── textures/     # Fichiers de textures (jpg, png, …)
-│   ├── src/
-│   │   ├── assets/       # Images, styles globaux, etc.
-│   │   ├── components/
-│   │   │   ├── ThreeScene.vue  # Scène Three.js et gestion des cubes
-│   │   │   └── Chat.vue        # Interface de chat pour saisir des commandes
-│   │   ├── store/
-│   │   │   └── cubeStore.js    # Gestion de l'état des cubes avec Pinia
-│   │   └── utils/        # Fonctions utilitaires, constantes, API, etc.
-│   ├── index.html
-│   └── vite.config.js
+└── frontend/
+    ├── public/
+    │   └── textures/             # Fichiers de textures (jpg, png, …)
+    ├── src/
+    │   ├── assets/               # Images, styles globaux, etc.
+    │   ├── components/
+    │   │   ├── ThreeScene.vue    # Scène Three.js et gestion des cubes
+    │   │   └── Chat.vue          # Interface de chat pour saisir des commandes
+    │   ├── managers/             # Gestionnaires d'objets 3D
+    │   │   ├── BallManager.js
+    │   │   ├── CloneManager.js
+    │   │   ├── MainCubeManager.js
+    │   │   └── TrailManager.js
+    │   ├── store/
+    │   │   └── cubeStore.js      # Gestion de l'état des cubes avec Pinia
+    │   └── utils/                # Fonctions utilitaires, constantes, API, etc.
+    ├── index.html
+    └── vite.config.js
+
 ```
 
 ### Back-end
